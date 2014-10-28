@@ -49,7 +49,7 @@ function [ landuseGRIDobj ] = importLANDUSE( filepath )
 P = inputParser;
 
 addRequired(P,'nargin',@(x)...
-    x == 4);
+    x == 1);
 addRequired(P,'nargout',@(x)...
     x == 1);
 addRequired(P,'filepath',@(x)...
@@ -69,9 +69,6 @@ end
 %% Import DEM to Grid Object
 
 landuseGRIDobj = GRIDobj(filepath);
-
-end
-
 
 end
 
