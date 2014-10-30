@@ -59,12 +59,10 @@ parse(P,nargin,nargout,demGRIDobj,landuseGRIDobj);
 %% Generate Plot
 
 plotHandle = figure();
-scrn = get(0,'ScreenSize');
-set(gca,'Position',scrn);
 
 subplot(1,2,1);
 imageschs(demGRIDobj);
-title('Digital Elevation Model');
+title('Raw Digital Elevation Model');
 xlabel('Easting (meters)');
 ylabel('Northing (meters)')
 

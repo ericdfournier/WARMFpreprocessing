@@ -85,7 +85,7 @@ function OUT = chiplot(S,DEM,A,varargin)
 
 
 % Parse Inputs
-p = inputParser;         
+p = InputParser;         
 p.FunctionName = 'chiplot';
 addRequired(p,'S',@(x) isa(x,'STREAMobj'));
 addRequired(p,'DEM', @(x) isa(x,'GRIDobj'));

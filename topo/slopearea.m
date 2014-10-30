@@ -88,7 +88,7 @@ function OUT = slopearea(S,DEM,A,varargin)
 narginchk(3,inf)
 
 % Parse Inputs
-p = inputParser;         
+p = InputParser;         
 p.FunctionName = 'slopearea';
 
 validstreamgradient = {'forward' 'centered' 'robust'};
