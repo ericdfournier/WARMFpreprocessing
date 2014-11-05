@@ -1,12 +1,10 @@
-%% Initialize Filesystem Parameters
+%% IMPORT DATA
 
 workingDirectory = ['/Users/ericfournier/Google Drive/Personal/',...
      'Miscellaneous/Kendra/DEM Delineation/'];
 cd(workingDirectory);
 DEMfilepath = [pwd,'/18040009demg.tif'];
 LANDUSEfilepath = [pwd,'/NLCD_landcover_2001.tif'];
-
-%% IMPORT DATA
 
 % Read data into memory
 demRAW = importDEM(DEMfilepath);
@@ -47,7 +45,7 @@ flowAccumulationPlot(dem,flowAccumulation);
 
 % Set drainage area threshold
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-drainageAreaThreshold = 1e6; % [meters^2]
+drainageAreaThreshold = 1e7; % [meters^2]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Convert to pixels based on dem resolution
@@ -57,16 +55,6 @@ flowAccumulationThreshold = flowAccumulation > minApix;
 
 % Compute Streams from thresholded flow accumulation
 streamsRaw = STREAMobj(flowDirection,flowAccumulationThreshold);
-
-%% SELECT STREAM COMPONENTS
-
-% Limit to top ten connected components
-streamsRaw = klargestconncomps(streamsRaw,10);
-
-% Extract large streams
-streams = extractconncomps(streamsRaw); close;
-
-%% DEFINE DRAINAGE BASINS
 
 % Set stream order threshold for basin delination
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,6 +66,9 @@ delineationStreamOrder = 6; % [Unitless]
 flowAccumulationThreshold = 1e1; % [Unitless]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Limit to top ten connected components
+streams = klargestconncomps(streamsRaw,1);
+
 % Compute stream order
 streamOrder = streamorder(flowDirection,...
     flowAccumulation > flowAccumulationThreshold);
@@ -88,3 +79,77 @@ streamOrder = streamorder(flowDirection,...
 
 % View drainage basins
 imageschs(dem,basins);
+
+%% COMPUTE STATISTICS
+
+basinIds = unique(basins.Z);
+basinIds = basinIds(2:end);
+basinCount = max(basinIds);
+SLOPE = gradient8(dem,'per');
+ASPECT = aspect(dem);
+streamsGRID = STREAMobj2GRIDobj(streams);
+adjacency = imRAG(basins.Z);
+
+reachUpstreamCatchment = zeros(basinCount,1);
+reachDownstreamCatchment = zeros(basinCount,1);
+reachMeanSlope = zeros(basinCount,1);
+reachModeAspect = zeros(basinCount,1);
+catchmentMinElevation = zeros(basinCount,1);
+catchmentMaxElevation = zeros(basinCount,1);
+catchmentLanduseStats = cell(basinCount,1);
+
+for i = 1:basinCount
+    
+    currentCatchment = basins.Z == i;
+    currentReach = currentCatchment .* streamsGRID.Z;
+    
+    currentCatchmentElevation = currentCatchment .* dem.Z;
+    currentCatchmentLanduse = currentCatchment .* landuse.Z;
+    
+    reachIDx = find(currentReach);
+    catchmentIDx = find(currentCatchment);
+    
+    reachMeanSlope(i,1) = mean(SLOPE.Z(reachIDx));
+    reachModeAspect(i,1) = mode(ASPECT.Z(reachIDx));
+    
+    catchmentMinElevation(i,1) = min(min(dem.Z(catchmentIDx)));
+    catchmentMaxElevation(i,1) = max(max(dem.Z(catchmentIDx)));
+    
+    catchmentLanduseVec = currentCatchmentLanduse(catchmentIDx);
+    bins = unique(catchmentLanduseVec);
+    counts = hist(catchmentLanduseVec,bins)';
+    fractions = (counts)./sum(counts);
+    catchmentLanduseStats{i,1} = horzcat(bins,fractions);
+    
+    col1Ind_DS = find(adjacency(:,1) == i,1,'first');
+    col2Ind_DS = find(adjacency(:,2) == i,2,'first');
+    rowInd_DS = min([col1Ind_DS col2Ind_DS]);
+    currentRow_DS = adjacency(rowInd_DS,:);
+    
+    col1Ind_US = find(adjacency(:,1) == i,1,'last');
+    col2Ind_US = find(adjacency(:,2) == i,2,'last');
+    rowInd_US = max([col1Ind_US col2Ind_US]);
+    currentRow_US = adjacency(rowInd_US,:);
+    
+    if i == 1
+        
+        reachUpstreamCatchment(i,1) = NaN;
+        reachDownstreamCatchment(i,1) = currentRow_DS(...
+            adjacency(rowInd_DS,:) ~= i);
+    
+    elseif i == basinCount
+        
+        reachUpstreamCatchment(i,1) = currentRow_US(...
+            adjacency(rowInd_US,:) ~= i);
+        reachDownstreamCatchment(i,1) = NaN;
+        
+    else
+        
+        reachUpstreamCatchment(i,1) = currentRow_US(...
+            adjacency(rowInd_US,:) ~= i);
+        reachDownstreamCatchment(i,1) = currentRow_DS(...
+            adjacency(rowInd_DS,:) ~= i);
+        
+    end
+    
+end
