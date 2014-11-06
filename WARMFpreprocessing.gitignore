@@ -5,3 +5,7 @@
 # Miscellaneous File System Components
 
 *.DS_Store
+
+# Data directory containing sample watersheds
+
+/data
