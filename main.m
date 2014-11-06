@@ -1,10 +1,8 @@
 %% IMPORT DATA
 
-workingDirectory = ['/Users/ericfournier/Google Drive/Personal/',...
-     'Miscellaneous/Kendra/DEM Delineation/'];
-cd(workingDirectory);
-DEMfilepath = [pwd,'/18040009demg.tif'];
-LANDUSEfilepath = [pwd,'/NLCD_landcover_2001.tif'];
+cd '~/Repositories/WARMFpreprocessing';
+DEMfilepath = [pwd,'/data/Lower_Hudson/02030101demg.tif'];
+LANDUSEfilepath = [pwd,'/data/Lower_Hudson/NLCD_landcover_2001.tif'];
 
 % Read data into memory
 demRAW = importDEM(DEMfilepath);
@@ -20,7 +18,7 @@ inputDataPlot(demRAW,landuse);
 
 % Fill Sinks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-maxDepth = 10; % [meters]
+maxDepth = 2; % [meters]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dem = fillsinks(demRAW,maxDepth);
 
