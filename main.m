@@ -1,18 +1,20 @@
 %% IMPORT DATA
 
 cd '~/Repositories/WARMFpreprocessing';
-DEMfilepath = [pwd,'/data/Lower_Hudson/02030101demg.tif'];
-LANDUSEfilepath = [pwd,'/data/Lower_Hudson/NLCD_landcover_2001.tif'];
+DEMfilepath = [pwd,'/data/Unknown/18040009demg.tif'];
+LANDUSEfilepath = [pwd,'/data/Unknown/NLCD_landcover_2001.tif'];
+REACHfilepath = [pwd,'/data/Unknown/rf1.shp'];
 
 % Read data into memory
 demRAW = importDEM(DEMfilepath);
 landuseRAW = importLANDUSE(LANDUSEfilepath);
+reaches = shaperead(REACHfilepath);
 
 % Resize and Crop Landuse to DEM
 landuse = cropResizeGRIDobj(landuseRAW,demRAW);
 
 % View Input Data
-inputDataPlot(demRAW,landuse);
+inputDataPlot(demRAW,landuse,reaches);
 
 %% CLEAN THE DATA
 

@@ -1,4 +1,6 @@
-function [ plotHandle ] = inputDataPlot( demGRIDobj, landuseGRIDobj )
+function [ plotHandle ] = inputDataPlot(    demGRIDobj, ...
+                                            landuseGRIDobj, ...
+                                            reachFileSHAPEstruct )
 % inputDataPlot.m Function to generate a figure with two subplots showing
 % the raw input digital elevation model data and the landuse data side by
 % side
@@ -20,6 +22,10 @@ function [ plotHandle ] = inputDataPlot( demGRIDobj, landuseGRIDobj )
 %
 %   landuseGRIDobj =    [GRIDobj] for the landuse dataset
 %
+%   reachFileSHAPEstruct = [SHAPESstruct] shapefile structure array
+%                       corresponding to the reference reachfile (RF1) 
+%                       obtained for the study area
+%
 % OUTPUTS:
 %
 %   plotHandle =        Arbitrary variable assignment value for the 
@@ -27,7 +33,7 @@ function [ plotHandle ] = inputDataPlot( demGRIDobj, landuseGRIDobj )
 %
 % EXAMPLES:
 %   
-%   Example 1 =         plot1 = inputDataPlot(dem, landuse);
+%   Example 1 =         plot1 = inputDataPlot(dem, landuse, reaches);
 %                                            
 % CREDITS:
 %
@@ -44,7 +50,7 @@ function [ plotHandle ] = inputDataPlot( demGRIDobj, landuseGRIDobj )
 P = inputParser;
 
 addRequired(P,'nargin',@(x)...
-    x == 2);
+    x == 3);
 addRequired(P,'nargout',@(x)...
     x >= 0);
 addRequired(P,'demGRIDobj',@(x)...
@@ -53,16 +59,21 @@ addRequired(P,'demGRIDobj',@(x)...
 addRequired(P,'landuseGRIDobj',@(x)...
     isa(x,'GRIDobj') &&...
     ~isempty(x));
+addRequired(P,'reachFileSHAPEstruct',@(x)...
+    isstruct(x) &&...
+    ~isempty(x));
 
-parse(P,nargin,nargout,demGRIDobj,landuseGRIDobj);
+parse(P,nargin,nargout,demGRIDobj,landuseGRIDobj,reachFileSHAPEstruct);
 
 %% Generate Plot
 
 plotHandle = figure();
 
 subplot(1,2,1);
+hold on
 imageschs(demGRIDobj);
-title('Raw Digital Elevation Model');
+mapshow(reachFileSHAPEstruct,'Color','black','LineWidth',1);
+title('Raw Digital Elevation Model With Reference Reach Delineations');
 xlabel('Easting (meters)');
 ylabel('Northing (meters)')
 

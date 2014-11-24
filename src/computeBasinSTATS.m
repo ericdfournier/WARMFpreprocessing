@@ -72,7 +72,7 @@ addRequired(P,'nargout',@(x)...
 addRequired(P,'demGRIDobj',@(x)...
     isa(x,'GRIDobj') &&...
     ~isempty(x));
-addRequired(p,'landuseGRIDobj',@(x)...
+addRequired(P,'landuseGRIDobj',@(x)...
     isa(x,'GRIDobj') &&...
     ~isempty(x));
 addRequired(P,'basinsGRIDobj',@(x)...
@@ -89,7 +89,7 @@ parse(P,nargin,nargout,demGRIDobj,landuseGRIDobj,basinsGRIDobj, ...
 
 %% Function Parameters
 
-catchmentIds = unique(basins.Z);
+catchmentIds = unique(basinsGRIDobj.Z);
 catchmentIds = catchmentIds(2:end);
 catchmentCount = max(catchmentIds);
 catchmentMinElevation = zeros(catchmentCount,1);
@@ -100,11 +100,11 @@ catchmentLanduseStats = cell(catchmentCount,1);
 
 for i = 1:catchmentCount
     
-    currentCatchment = basins.Z == i;
-    currentCatchmentLanduse = currentCatchment .* landuse.Z;
+    currentCatchment = basinsGRIDobj.Z == i;
+    currentCatchmentLanduse = currentCatchment .* landuseGRIDobj.Z;
     catchmentIDx = find(currentCatchment);
-    catchmentMinElevation(i,1) = min(min(dem.Z(catchmentIDx)));
-    catchmentMaxElevation(i,1) = max(max(dem.Z(catchmentIDx)));
+    catchmentMinElevation(i,1) = min(min(demGRIDobj.Z(catchmentIDx)));
+    catchmentMaxElevation(i,1) = max(max(demGRIDobj.Z(catchmentIDx)));
     catchmentLanduseVec = currentCatchmentLanduse(catchmentIDx);
     bins = unique(catchmentLanduseVec);
     counts = hist(catchmentLanduseVec,bins)';
