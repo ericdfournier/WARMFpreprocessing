@@ -20,7 +20,7 @@ inputDataPlot(demRAW,landuse,reaches);
 
 % Fill Sinks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-maxDepth = 2; % [meters]
+maxDepth = 10; % [meters]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dem = fillsinks(demRAW,maxDepth);
 

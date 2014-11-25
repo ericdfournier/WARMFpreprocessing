@@ -127,21 +127,34 @@ adjacency = imRAG(basinsGRIDobj.Z);
 basinIds = unique(basinsGRIDobj.Z);
 basinIds = basinIds(2:end);
 basinCount = max(basinIds);
+
 reachUpstreamCatchment = zeros(basinCount,1);
 reachDownstreamCatchment = zeros(basinCount,1);
+reachMinElevation = zeros(basinCount,1);
+reachMaxElevation = zeros(basinCount,1);
 reachMeanSlope = zeros(basinCount,1);
 reachModeAspect = zeros(basinCount,1);
+reachDepth = zeros(basinCount,1);
+reachWidth = zeros(basinCount,1);
 
 %% Compute Reach Statistics
 
 for i = 1:basinCount
     
+    % Extract Current Basin/Reach Mask Indexes
+    
     currentCatchment = basinsGRIDobj.Z == i;
     currentReach = currentCatchment .* streamsGRIDobj.Z;
     reachIDx = find(currentReach);
     
-    reachMeanSlope(i,1) = mean(SLOPE.Z(reachIDx));
-    reachModeAspect(i,1) = mode(ASPECT.Z(reachIDx));
+    % Compute Topographic Attribute Components
+    
+    reachMinElevation(i,1) = min(demGRIDobj.Z(reachIDx));
+    reachMaxElevation(i,1) = max(demGRIDobj.Z(reachIDX));
+    reachMeanSlope(i,1) = mean(slopeGRIDobj.Z(reachIDx));
+    reachModeAspect(i,1) = mode(aspectGRIDobj.Z(reachIDx));
+    
+    % Compute Upstream and Downstream Attribute Components
 
     col1Ind_DS = find(adjacency(:,1) == i,1,'first');
     col2Ind_DS = find(adjacency(:,2) == i,2,'first');
@@ -174,10 +187,24 @@ for i = 1:basinCount
         
     end
     
+    % Assign Reach Depth and Width on the Basis of Subcatchment Membership
+    
+    [reachDepth(i,1), reachWidth(i,1)] = computeReachProfile( ...
+        currentCatchment, demGRIDobj, reachFileSHAPEstruct);
+    
 end
 
 %% Assemble Final Outputs
 
-reachSTATS = [];
+reachSTATS = horzcat( ...
+    num2cell(reachIDx), ...
+    num2cell(reachMinElevation), ...
+    num2cell(reachMaxElevation), ...
+    num2cell(reachMeanSlope), ...
+    num2cell(reachMeanAspect), ...
+    num2cell(reachUpstreamCatchment), ...
+    num2cell(reachDownstreamCatchment), ...
+    num2cell(reachDepth), ...
+    num2cell(reachWidth) );
 
 end
