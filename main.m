@@ -1,9 +1,9 @@
 %% IMPORT DATA
 
 cd '~/Repositories/WARMFpreprocessing';
-DEMfilepath = [pwd,'/data/Unknown/18040009demg.tif'];
-LANDUSEfilepath = [pwd,'/data/Unknown/NLCD_landcover_2001.tif'];
-REACHfilepath = [pwd,'/data/Unknown/rf1.shp'];
+DEMfilepath = [pwd,'/data/Pajaro/18060002demg.tif'];
+LANDUSEfilepath = [pwd,'/data/Pajaro/NLCD_landcover_2001.tif'];
+REACHfilepath = [pwd,'/data/Pajaro/rf1.shp'];
 
 % Read data into memory
 demRAW = importDEM(DEMfilepath);
@@ -58,7 +58,7 @@ streamsRaw = STREAMobj(flowDirection,flowAccumulationThreshold);
 
 % Set stream order threshold for basin delination
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-delineationStreamOrder = 6; % [Unitless]
+delineationStreamOrder = 7; % [Unitless]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set the minimum flow accumulation threshold to define stream order
@@ -80,76 +80,28 @@ streamOrder = streamorder(flowDirection,...
 % View drainage basins
 imageschs(dem,basins);
 
-%% COMPUTE STATISTICS
+%% COMPUTE BASIN STATISTICS
 
-basinIds = unique(basins.Z);
-basinIds = basinIds(2:end);
-basinCount = max(basinIds);
-SLOPE = gradient8(dem,'per');
-ASPECT = aspect(dem);
+% Compute required inputs
+slopeLayer = gradient8(dem,'per');
+aspectLayer = aspect(dem);
 streamsGRID = STREAMobj2GRIDobj(streams);
-adjacency = imRAG(basins.Z);
 
-reachUpstreamCatchment = zeros(basinCount,1);
-reachDownstreamCatchment = zeros(basinCount,1);
-reachMeanSlope = zeros(basinCount,1);
-reachModeAspect = zeros(basinCount,1);
-catchmentMinElevation = zeros(basinCount,1);
-catchmentMaxElevation = zeros(basinCount,1);
-catchmentLanduseStats = cell(basinCount,1);
+% Compute basin stats
+basinSTATS = computeBasinSTATS( ...
+    dem, ...
+    landuse, ...
+    basins, ...
+    slopeLayer, ...
+    aspectLayer);
 
-for i = 1:basinCount
-    
-    currentCatchment = basins.Z == i;
-    currentReach = currentCatchment .* streamsGRID.Z;
-    
-    currentCatchmentElevation = currentCatchment .* dem.Z;
-    currentCatchmentLanduse = currentCatchment .* landuse.Z;
-    
-    reachIDx = find(currentReach);
-    catchmentIDx = find(currentCatchment);
-    
-    reachMeanSlope(i,1) = mean(SLOPE.Z(reachIDx));
-    reachModeAspect(i,1) = mode(ASPECT.Z(reachIDx));
-    
-    catchmentMinElevation(i,1) = min(min(dem.Z(catchmentIDx)));
-    catchmentMaxElevation(i,1) = max(max(dem.Z(catchmentIDx)));
-    
-    catchmentLanduseVec = currentCatchmentLanduse(catchmentIDx);
-    bins = unique(catchmentLanduseVec);
-    counts = hist(catchmentLanduseVec,bins)';
-    fractions = (counts)./sum(counts);
-    catchmentLanduseStats{i,1} = horzcat(bins,fractions);
-    
-    col1Ind_DS = find(adjacency(:,1) == i,1,'first');
-    col2Ind_DS = find(adjacency(:,2) == i,2,'first');
-    rowInd_DS = min([col1Ind_DS col2Ind_DS]);
-    currentRow_DS = adjacency(rowInd_DS,:);
-    
-    col1Ind_US = find(adjacency(:,1) == i,1,'last');
-    col2Ind_US = find(adjacency(:,2) == i,2,'last');
-    rowInd_US = max([col1Ind_US col2Ind_US]);
-    currentRow_US = adjacency(rowInd_US,:);
-    
-    if i == 1
-        
-        reachUpstreamCatchment(i,1) = NaN;
-        reachDownstreamCatchment(i,1) = currentRow_DS(...
-            adjacency(rowInd_DS,:) ~= i);
-    
-    elseif i == basinCount
-        
-        reachUpstreamCatchment(i,1) = currentRow_US(...
-            adjacency(rowInd_US,:) ~= i);
-        reachDownstreamCatchment(i,1) = NaN;
-        
-    else
-        
-        reachUpstreamCatchment(i,1) = currentRow_US(...
-            adjacency(rowInd_US,:) ~= i);
-        reachDownstreamCatchment(i,1) = currentRow_DS(...
-            adjacency(rowInd_DS,:) ~= i);
-        
-    end
-    
-end
+%% COMPUTE REACH STATISTICS 
+
+% Compute required inputs
+reachSTATS = computeReachSTATS( ...
+    streams, ...
+    reaches, ...
+    dem, ...
+    basins, ...
+    slopeLayer, ...
+    aspectLayer );

@@ -100,6 +100,12 @@ pInd = sub2ind(size(currentCatchment),boundaryTrace(:,1),boundaryTrace(:,2));
 cX = cpX(pInd);
 cY = cpY(pInd);
 
+%% Check Ordering of External Contours
+
+if ispolycw(cX,cY) == 0
+    [cX, cY] = poly2cw(cX,cY);
+end
+
 %% Extract Reach Geometries
 
 rX = extractfield(reachFileSHAPEstruct,'X')';
@@ -121,7 +127,7 @@ end
 %% Extract Matching Reach Segments and Compute Average Width and Depth
 
 reachSections = reachFileSHAPEstruct(logical(matches),:);
-reachDepth = mean(reachSections.PDEPTH);
-reachWidth = mean(reachSections.PWIDTH);
+reachDepth = mean([reachSections.PDEPTH]);
+reachWidth = mean([reachSections.PWIDTH]);
 
 end
